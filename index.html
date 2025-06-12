@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Mask Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <i class="fas fa-mask"></i>
+                <h1>Face Mask Detection</h1>
+            </div>
+            <p class="subtitle">Upload an image/video or use your webcam to check mask compliance</p>
+        </header>
+
+        <div class="card upload-section">
+            <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+                <div class="file-input-wrapper">
+                    <label for="fileInput" class="file-label">
+                        <div class="drop-area" id="dropArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span id="fileName">Drag & drop files here or click to browse</span>
+                            <span class="file-types">Supports: JPG, PNG, MP4, AVI</span>
+                        </div>
+                        <input id="fileInput" type="file" name="file" accept=".png,.jpg,.jpeg,.mp4,.avi">
+                    </label>
+                    <div class="preview-container" id="previewContainer"></div>
+                </div>
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <span>Upload & Analyze</span>
+                    <i class="fas fa-search"></i>
+                </button>
+                <div class="loading" id="loadingIndicator" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing your file...</p>
+                </div>
+            </form>
+        </div>
+
+        <div class="card webcam-section">
+            <a href="/webcam" class="btn-secondary">
+                <i class="fas fa-camera"></i>
+                <span>Use Webcam</span>
+            </a>
+            <p class="webcam-hint">Real-time mask detection</p>
+        </div>
+
+        <footer>
+            <p>Face Mask Detection System © 2025</p>
+        </footer>
+    </div>
+</body>
+</html>

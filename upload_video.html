@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Large Video Upload</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --primary-dark: #3a56d4;
+      --success-color: #4cc9f0;
+      --error-color: #f72585;
+      --warning-color: #ff9e00;
+      --light-bg: #f8f9fa;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f5f7ff;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .upload-container {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      box-shadow: var(--box-shadow);
+      margin-top: 2rem;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    h1 i {
+      font-size: 1.8rem;
+    }
+
+    .upload-area {
+      border: 2px dashed #ccc;
+      border-radius: var(--border-radius);
+      padding: 3rem 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      background: var(--light-bg);
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary-color);
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .upload-area.dragover {
+      border-color: var(--primary-color);
+      background: rgba(67, 97, 238, 0.1);
+    }
+
+    .upload-area i {
+      font-size: 3rem;
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .upload-area p {
+      margin: 0.5rem 0;
+      color: #666;
+    }
+
+    .file-input {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    #videoFileInput {
+      display: none;
+    }
+
+    .file-info {
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background: var(--light-bg);
+      border-radius: var(--border-radius);
+      display: none;
+    }
+
+    .file-info.active {
+      display: block;
+    }
+
+    .file-info p {
+      margin: 0.5rem 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .file-info span {
+      font-weight: 500;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+    }
+
+    .btn-primary:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .progress-container {
+      width: 100%;
+      background: #eee;
+      border-radius: var(--border-radius);
+      margin: 1.5rem 0;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-container.active {
+      display: block;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 20px;
+      background: var(--primary-color);
+      transition: width 0.3s ease;
+      position: relative;
+    }
+
+    .progress-text {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: white;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .status-message {
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      margin: 1rem 0;
+      display: none;
+    }
+
+    .status-message.active {
+      display: block;
+    }
+
+    .status-message.success {
+      background: rgba(76, 201, 240, 0.2);
+      border-left: 4px solid var(--success-color);
+      color: #006a87;
+    }
+
+    .status-message.error {
+      background: rgba(247, 37, 133, 0.2);
+      border-left: 4px solid var(--error-color);
+      color: #8a0030;
+    }
+
+    .status-message.warning {
+      background: rgba(255, 158, 0, 0.2);
+      border-left: 4px solid var(--warning-color);
+      color: #8a5400;
+    }
+
+    .chunk-info {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      .upload-container {
+        padding: 1.5rem;
+      }
+
+      .upload-area {
+        padding: 2rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="upload-container">
+    <h1>
+      <i class="fas fa-video"></i>
+      Large Video Upload
+    </h1>
+    
+    <div class="upload-area" id="uploadArea">
+      <i class="fas fa-cloud-upload-alt"></i>
+      <p><strong>Drag & drop your video file here</strong></p>
+      <p>or click to browse files</p>
+      <p class="file-types">Supports: MP4, AVI, MOV, MKV, WEBM</p>
+      <input type="file" id="videoFileInput" accept="video/*" class="file-input" />
+    </div>
+    
+    <div class="file-info" id="fileInfo">
+      <p>
+        <span>File name:</span>
+        <span id="fileName"></span>
+      </p>
+      <p>
+        <span>File size:</span>
+        <span id="fileSize"></span>
+      </p>
+      <p>
+        <span>File type:</span>
+        <span id="fileType"></span>
+      </p>
+    </div>
+    
+    <button id="uploadVideoBtn" class="btn btn-primary" disabled>
+      <i class="fas fa-upload"></i>
+      <span>Upload Video</span>
+    </button>
+    
+    <div class="progress-container" id="uploadProgressContainer">
+      <div class="progress-bar" id="uploadProgressBar">
+        <span class="progress-text" id="progressText">0%</span>
+      </div>
+    </div>
+    
+    <div class="chunk-info" id="chunkInfo">
+      Chunked upload in progress...
+    </div>
+    
+    <div class="status-message" id="uploadStatus"></div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/video_upload.js') }}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const uploadArea = document.getElementById('uploadArea');
+      const fileInput = document.getElementById('videoFileInput');
+      const fileInfo = document.getElementById('fileInfo');
+      const fileName = document.getElementById('fileName');
+      const fileSize = document.getElementById('fileSize');
+      const fileType = document.getElementById('fileType');
+      const uploadBtn = document.getElementById('uploadVideoBtn');
+      const progressContainer = document.getElementById('uploadProgressContainer');
+      const progressBar = document.getElementById('uploadProgressBar');
+      const progressText = document.getElementById('progressText');
+      const chunkInfo = document.getElementById('chunkInfo');
+      const statusMessage = document.getElementById('uploadStatus');
+      
+      // Format file size
+      function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+      }
+      
+      // Handle file selection
+      fileInput.addEventListener('change', function() {
+        if (this.files.length) {
+          const file = this.files[0];
+          fileName.textContent = file.name;
+          fileSize.textContent = formatFileSize(file.size);
+          fileType.textContent = file.type || 'Unknown';
+          
+          fileInfo.classList.add('active');
+          uploadBtn.disabled = false;
+          
+          // Reset previous upload state
+          progressContainer.classList.remove('active');
+          progressBar.style.width = '0%';
+          progressText.textContent = '0%';
+          chunkInfo.style.display = 'none';
+          statusMessage.classList.remove('active', 'success', 'error', 'warning');
+        }
+      });
+      
+      // Drag and drop functionality
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+      });
+      
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      
+      ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+      });
+      
+      ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+      });
+      
+      function highlight() {
+        uploadArea.classList.add('dragover');
+      }
+      
+      function unhighlight() {
+        uploadArea.classList.remove('dragover');
+      }
+      
+      uploadArea.addEventListener('drop', function(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length && files[0].type.startsWith('video/')) {
+          fileInput.files = files;
+          fileInput.dispatchEvent(new Event('change'));
+        } else {
+          showStatusMessage('Please select a video file', 'error');
+        }
+      });
+      
+      // Show status message
+      function showStatusMessage(message, type) {
+        statusMessage.textContent = message;
+        statusMessage.className = 'status-message active ' + type;
+      }
+      
+      // Button ripple effect
+      uploadBtn.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple');
+        ripple.style.left = `${e.clientX - this.getBoundingClientRect().left}px`;
+        ripple.style.top = `${e.clientY - this.getBoundingClientRect().top}px`;
+        
+        const existingRipple = this.querySelector('.ripple');
+        if (existingRipple) {
+          existingRipple.remove();
+        }
+        
+        this.appendChild(ripple);
+        
+        setTimeout(() => {
+          ripple.remove();
+        }, 1000);
+      });
+    });
+  </script>
+</body>
+</html>
