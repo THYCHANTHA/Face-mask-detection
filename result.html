@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Face Mask Detection - Result</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .result-container {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin: 2rem 0;
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+      }
+
+      .result-container:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+      }
+
+      .result-image {
+        max-width: 100%;
+        border-radius: var(--border-radius);
+        display: block;
+        margin: 1.5rem auto;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        border: 1px solid #eee;
+      }
+
+      .stats-container {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-radius: var(--border-radius);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+      }
+
+      .stat-item {
+        text-align: center;
+        padding: 1.5rem 1rem;
+        background-color: white;
+        border-radius: var(--border-radius);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      }
+
+      .stat-item.mask {
+        border-top: 4px solid #4cc9f0;
+      }
+
+      .stat-item.no-mask {
+        border-top: 4px solid #f72585;
+      }
+
+      .stat-item.incorrect {
+        border-top: 4px solid #ff9e00;
+      }
+
+      .stat-value {
+        display: block;
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        display: block;
+        font-size: 1rem;
+        color: #666;
+        font-weight: 500;
+      }
+
+      .stat-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+
+      .btn-return {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 0.8rem 1.5rem;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        margin: 1.5rem auto;
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .btn-return:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+      }
+
+      .confidence-meter {
+        height: 6px;
+        background: #eee;
+        border-radius: 3px;
+        margin-top: 1rem;
+        overflow: hidden;
+      }
+
+      .confidence-level {
+        height: 100%;
+        background: var(--primary-color);
+        width: 0;
+        transition: width 1s ease;
+      }
+
+      @media (max-width: 768px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .result-container {
+          padding: 1.5rem;
+        }
+
+        .stat-value {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="logo-container">
+          <i class="fas fa-mask"></i>
+          <h1>Face Mask Detection Result</h1>
+        </div>
+        <p class="subtitle">Analysis of your uploaded image</p>
+      </header>
+
+      <div class="card result-container">
+        <h2><i class="fas fa-chart-bar"></i> Detection Results</h2>
+        <img
+          src="{{ url_for('static', filename=filename) }}"
+          alt="Processed Image"
+          class="result-image"
+        />
+
+        <div class="stats-container">
+          <h3><i class="fas fa-chart-pie"></i> Detection Statistics</h3>
+          <div class="stats-grid">
+            <div class="stat-item mask">
+              <i
+                class="stat-icon fas fa-check-circle"
+                style="color: #4cc9f0"
+              ></i>
+              <span class="stat-value">{{ stats.mask_count }}</span>
+              <span class="stat-label">Properly Worn Masks</span>
+              <div class="confidence-meter">
+                <div
+                  class="confidence-level"
+                  style="width: {{ (stats.mask_count|int / (stats.mask_count|int + stats.no_mask_count|int + stats.incorrect_count|int)) * 100 }}%"
+                ></div>
+              </div>
+            </div>
+            <div class="stat-item no-mask">
+              <i
+                class="stat-icon fas fa-times-circle"
+                style="color: #f72585"
+              ></i>
+              <span class="stat-value">{{ stats.no_mask_count }}</span>
+              <span class="stat-label">No Masks Detected</span>
+              <div class="confidence-meter">
+                <div
+                  class="confidence-level"
+                  style="width: {{ (stats.no_mask_count|int / (stats.mask_count|int + stats.no_mask_count|int + stats.incorrect_count|int)) * 100 }}%"
+                ></div>
+              </div>
+            </div>
+            <div class="stat-item incorrect">
+              <i
+                class="stat-icon fas fa-exclamation-triangle"
+                style="color: #ff9e00"
+              ></i>
+              <span class="stat-value">{{ stats.incorrect_count }}</span>
+              <span class="stat-label">Incorrectly Worn</span>
+              <div class="confidence-meter">
+                <div
+                  class="confidence-level"
+                  style="width: {{ (stats.incorrect_count|int / (stats.mask_count|int + stats.no_mask_count|int + stats.incorrect_count|int)) * 100 }}%"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <a href="{{ url_for('index') }}" class="btn-return">
+        <i class="fas fa-arrow-left"></i>
+        <span>Analyze Another Image</span>
+      </a>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Animate the confidence meters on page load
+        setTimeout(() => {
+          const meters = document.querySelectorAll(".confidence-level");
+          meters.forEach((meter) => {
+            const width = meter.style.width;
+            meter.style.width = "0";
+            setTimeout(() => {
+              meter.style.width = width;
+            }, 100);
+          });
+        }, 300);
+
+        // Add ripple effect to button
+        const btnReturn = document.querySelector(".btn-return");
+        btnReturn.addEventListener("click", function (e) {
+          const ripple = document.createElement("span");
+          ripple.classList.add("ripple");
+          ripple.style.left = `${
+            e.clientX - btnReturn.getBoundingClientRect().left
+          }px`;
+          ripple.style.top = `${
+            e.clientY - btnReturn.getBoundingClientRect().top
+          }px`;
+
+          const existingRipple = btnReturn.querySelector(".ripple");
+          if (existingRipple) {
+            existingRipple.remove();
+          }
+
+          btnReturn.appendChild(ripple);
+
+          setTimeout(() => {
+            ripple.remove();
+          }, 1000);
+        });
+      });
+    </script>
+  </body>
+</html>
