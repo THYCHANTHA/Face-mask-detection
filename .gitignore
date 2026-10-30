@@ -1,0 +1,10 @@
+# Runtime output created by the application
+static/uploads/
+
+# Python / notebook
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Ultralytics training output
+runs/
